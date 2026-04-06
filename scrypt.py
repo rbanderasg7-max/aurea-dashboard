@@ -25,7 +25,7 @@ def get_market_data():
 
         if len(df) >= 2:
             change = (df['Close'].iloc[-1] / df['Close'].iloc[-2] - 1) * 100
-            data[name] = round(change, 2)
+            data[name] = float(round(change, 2))
         else:
             data[name] = 0
 
@@ -37,10 +37,22 @@ def get_market_data():
 def generate_signals(data):
     signals = {}
 
-    signals['S&P 500'] = "LONG" if data['S&P 500'] > 0 else "SHORT"
-    signals['Nasdaq'] = "LONG" if data['Nasdaq'] > 0 else "SHORT"
-    signals['USD/MXN'] = "SHORT" if data['USD/MXN'] < 0 else "LONG"
-    signals['Oro'] = "LONG" if data['Oro'] > 0 else "NEUTRAL"
+    def safe_signal(value, reverse=False):
+        try:
+            if value is None:
+                return "NEUTRAL"
+            value = float(value)
+            if reverse:
+                return "SHORT" if value < 0 else "LONG"
+            else:
+                return "LONG" if value > 0 else "SHORT"
+        except:
+            return "NEUTRAL"
+
+    signals['S&P 500'] = safe_signal(data.get('S&P 500'))
+    signals['Nasdaq'] = safe_signal(data.get('Nasdaq'))
+    signals['USD/MXN'] = safe_signal(data.get('USD/MXN'), reverse=True)
+    signals['Oro'] = safe_signal(data.get('Oro'))
 
     return signals
 
